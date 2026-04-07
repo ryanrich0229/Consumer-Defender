@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Consumer Defender</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #0A1628;
+      color: #ffffff;
+      min-height: 100vh;
+    }
+    /* ── NAV ── */
+    nav {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 32px;
+      background: #0d1e38;
+      border-bottom: 2px solid #2563EB;
+    }
+    .nav-brand { display: flex; align-items: center; gap: 12px; }
+    .shield-icon {
+      width: 44px; height: 44px;
+      background: linear-gradient(135deg, #2563EB, #1d4ed8);
+      clip-path: polygon(50% 0%, 100% 15%, 100% 60%, 50% 100%, 0% 60%, 0% 15%);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; font-weight: 900; color: #F59E0B;
+      position: relative;
+    }
+    .shield-svg {
+      width: 44px; height: 52px;
+    }
+    .nav-title { font-size: 22px; font-weight: 800; color: #fff; letter-spacing: 1px; }
+    .nav-title span { color: #F59E0B; }
+    .nav-tagline { font-size: 11px; color: #93c5fd; letter-spacing: 2px; text-transform: uppercase; }
+    /* ── HERO ── */
+    .hero {
+      text-align: center; padding: 60px 24px 40px;
+    }
+    .hero-shield {
+      margin: 0 auto 24px;
+      width: 90px; height: 106px;
+    }
+    .hero h1 { font-size: 42px; font-weight: 900; letter-spacing: 1px; margin-bottom: 12px; }
+    .hero h1 span { color: #F59E0B; }
+    .hero p { font-size: 17px; color: #93c5fd; max-width: 520px; margin: 0 auto 8px; }
+    .hero-sub { font-size: 13px; color: #64748b; margin-top: 8px; }
+    /* ── MODULES ── */
+    .section-title {
+      text-align: center; font-size: 13px; font-weight: 700;
+      letter-spacing: 3px; text-transform: uppercase; color: #F59E0B;
+      margin-bottom: 8px;
+    }
+    .section-heading {
+      text-align: center; font-size: 26px; font-weight: 800;
+      margin-bottom: 32px; color: #fff;
+    }
+    .modules { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; padding: 0 24px 16px; }
+    .module-card {
+      background: #0d1e38; border: 1px solid #1e3a5f;
+      border-radius: 14px; padding: 28px 24px; width: 260px;
+      cursor: pointer; transition: all .2s; position: relative; overflow: hidden;
+    }
+    .module-card:hover { border-color: #2563EB; transform: translateY(-3px); box-shadow: 0 8px 32px rgba(37,99,235,.25); }
+    .module-card.unlocked { border-color: #2563EB; }
+    .module-card.unlocked:hover { border-color: #F59E0B; }
+    .module-icon { font-size: 36px; margin-bottom: 12px; }
+    .module-title { font-size: 17px; font-weight: 800; margin-bottom: 6px; }
+    .module-desc { font-size: 13px; color: #64748b; margin-bottom: 16px; line-height: 1.5; }
+    .module-badge {
+      display: inline-block; font-size: 11px; font-weight: 700;
+      padding: 4px 10px; border-radius: 20px; letter-spacing: 1px;
+    }
+    .badge-unlocked { background: #1e3a5f; color: #60a5fa; }
+    .badge-locked { background: #1a1a2e; color: #64748b; }
+    .lock-icon { position: absolute; top: 16px; right: 16px; font-size: 18px; color: #334155; }
+    /* ── BUNDLE BANNER ── */
+    .bundle-banner {
+      margin: 8px auto 40px; max-width: 620px;
+      background: linear-gradient(135deg, #1e3a5f, #0d2547);
+      border: 1px solid #F59E0B44; border-radius: 14px;
+      padding: 20px 28px; text-align: center;
+    }
+    .bundle-banner h3 { font-size: 17px; font-weight: 800; color: #F59E0B; margin-bottom: 6px; }
+    .bundle-banner p { font-size: 13px; color: #93c5fd; }
+    .bundle-btn {
+      margin-top: 14px; display: inline-block;
+      background: #F59E0B; color: #0A1628; font-weight: 800;
+      padding: 10px 28px; border-radius: 8px; cursor: pointer;
+      border: none; font-size: 14px; letter-spacing: .5px;
+      transition: background .2s;
+    }
+    .bundle-btn:hover { background: #fbbf24; }
+    /* ── PAYWALL MODAL ── */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,.75); z-index: 100;
+      align-items: center; justify-content: center;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal {
+      background: #0d1e38; border: 1px solid #2563EB; border-radius: 18px;
+      padding: 40px 36px; max-width: 420px; width: 90%; text-align: center;
+    }
+    .modal h2 { font-size: 24px; font-weight: 900; margin-bottom: 10px; }
+    .modal p { color: #93c5fd; font-size: 14px; margin-bottom: 24px; line-height: 1.6; }
+    .modal-price { font-size: 36px; font-weight: 900; color: #F59E0B; margin-bottom: 4px; }
+    .modal-price-sub { font-size: 12px; color: #64748b; margin-bottom: 24px; }
+    .modal-btn {
+      width: 100%; padding: 14px; background: #2563EB; border: none;
+      border-radius: 10px; color: #fff; font-size: 16px; font-weight: 800;
+      cursor: pointer; transition: background .2s; margin-bottom: 10px;
+    }
+    .modal-btn:hover { background: #1d4ed8; }
+    .modal-cancel { font-size: 13px; color: #64748b; cursor: pointer; }
+    .modal-cancel:hover { color: #93c5fd; }
+    /* ── ANALYZER SCREEN ── */
+    #analyzer-screen { display: none; padding: 32px 24px; max-width: 800px; margin: 0 auto; }
+    .back-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      color: #60a5fa; font-size: 14px; cursor: pointer;
+      border: none; background: none; margin-bottom: 28px;
+      font-weight: 600;
+    }
+    .back-btn:hover { color: #93c5fd; }
+    .analyzer-header { margin-bottom: 28px; }
+    .analyzer-header h2 { font-size: 30px; font-weight: 900; }
+    .analyzer-header p { color: #64748b; font-size: 14px; margin-top: 6px; }
+    .form-group { margin-bottom: 20px; }
+    .form-label { font-size: 13px; font-weight: 700; color: #93c5fd; margin-bottom: 8px; display: block; letter-spacing: .5px; text-transform: uppercase; }
+    .form-row { display: flex; gap: 14px; }
+    .form-row .form-group { flex: 1; }
+    input[type=text], textarea, select {
+      width: 100%; padding: 12px 14px; background: #0d1e38;
+      border: 1px solid #1e3a5f; border-radius: 8px;
+      color: #fff; font-size: 14px; outline: none; transition: border .2s;
+    }
+    input[type=text]:focus, textarea:focus { border-color: #2563EB; }
+    textarea { resize: vertical; min-height: 160px; font-family: inherit; }
+    .drop-zone {
+      border: 2px dashed #1e3a5f; border-radius: 12px;
+      padding: 32px; text-align: center; cursor: pointer;
+      transition: all .2s; margin-bottom: 12px;
+    }
+    .drop-zone:hover, .drop-zone.drag-over { border-color: #2563EB; background: #0d1e38; }
+    .drop-zone-icon { font-size: 32px; margin-bottom: 10px; }
+    .drop-zone p { color: #64748b; font-size: 14px; }
+    .drop-zone span { color: #60a5fa; font-weight: 600; }
+    .analyze-btn {
+      width: 100%; padding: 16px; background: linear-gradient(135deg, #2563EB, #1d4ed8);
+      border: none; border-radius: 10px; color: #fff;
+      font-size: 17px; font-weight: 800; cursor: pointer;
+      transition: opacity .2s; margin-top: 8px;
+    }
+    .analyze-btn:hover { opacity: .9; }
+    .analyze-btn:disabled { opacity: .5; cursor: not-allowed; }
+    /* ── RESULTS ── */
+    #results { display: none; margin-top: 36px; }
+    .verdict-banner {
+      border-radius: 14px; padding: 24px 28px; margin-bottom: 24px;
+      border: 2px solid;
+    }
+    .verdict-OVERCHARGED { background: #1f0a0a; border-color: #EF4444; }
+    .verdict-SLIGHTLY_OVERPRICED { background: #1a1200; border-color: #F59E0B; }
+    .verdict-FAIR { background: #0a1f0a; border-color: #22c55e; }
+    .verdict-label { font-size: 12px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px; }
+    .verdict-OVERCHARGED .verdict-label { color: #EF4444; }
+    .verdict-SLIGHTLY_OVERPRICED .verdict-label { color: #F59E0B; }
+    .verdict-FAIR .verdict-label { color: #22c55e; }
+    .verdict-title { font-size: 26px; font-weight: 900; margin-bottom: 10px; }
+    .verdict-summary { font-size: 15px; color: #cbd5e1; line-height: 1.6; margin-bottom: 16px; }
+    .savings-row { display: flex; gap: 24px; flex-wrap: wrap; }
+    .savings-box { background: rgba(255,255,255,.06); border-radius: 10px; padding: 14px 20px; flex: 1; min-width: 120px; }
+    .savings-box-label { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+    .savings-box-value { font-size: 24px; font-weight: 900; }
+    .overcharge-val { color: #EF4444; }
+    .fair-val { color: #22c55e; }
+    .charged-val { color: #fff; }
+    /* line items */
+    .results-section { margin-bottom: 28px; }
+    .results-section-title {
+      font-size: 13px; font-weight: 700; letter-spacing: 2px;
+      text-transform: uppercase; color: #F59E0B; margin-bottom: 14px;
+      padding-bottom: 8px; border-bottom: 1px solid #1e3a5f;
+    }
+    .line-item {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      padding: 14px 0; border-bottom: 1px solid #0d1e38; gap: 12px;
+    }
+    .line-item-name { font-weight: 700; font-size: 15px; margin-bottom: 4px; }
+    .line-item-reason { font-size: 12px; color: #64748b; }
+    .line-item-prices { text-align: right; flex-shrink: 0; }
+    .charged-price { font-size: 16px; font-weight: 800; }
+    .fair-price { font-size: 12px; color: #22c55e; }
+    .flag-pill {
+      display: inline-block; font-size: 10px; font-weight: 700;
+      padding: 2px 8px; border-radius: 12px; margin-bottom: 4px; letter-spacing: 1px;
+    }
+    .flag-OVERPRICED { background: #3f0707; color: #EF4444; }
+    .flag-UNNECESSARY { background: #3f1500; color: #F59E0B; }
+    .flag-OK { background: #0a2e0a; color: #22c55e; }
+    /* script / questions */
+    .script-line {
+      background: #0d1e38; border-left: 3px solid #2563EB;
+      border-radius: 0 8px 8px 0; padding: 12px 16px;
+      font-size: 14px; color: #cbd5e1; margin-bottom: 10px; line-height: 1.5;
+    }
+    .question-item {
+      display: flex; gap: 12px; align-items: flex-start;
+      margin-bottom: 10px; font-size: 14px; color: #cbd5e1;
+    }
+    .question-num {
+      background: #1e3a5f; color: #60a5fa; font-weight: 800;
+      font-size: 11px; min-width: 24px; height: 24px;
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; margin-top: 1px;
+    }
+    /* loading spinner */
+    .spinner {
+      display: none; margin: 40px auto;
+      width: 48px; height: 48px;
+      border: 4px solid #1e3a5f;
+      border-top-color: #2563EB;
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { text-align: center; color: #64748b; margin-top: 16px; font-size: 14px; display: none; }
+    .error-box {
+      background: #1f0a0a; border: 1px solid #EF4444; border-radius: 10px;
+      padding: 16px 20px; color: #EF4444; font-size: 14px; margin-top: 20px; display: none;
+    }
+    @media (max-width: 600px) {
+      .form-row { flex-direction: column; }
+      .savings-row { flex-direction: column; }
+      .hero h1 { font-size: 30px; }
+      nav { padding: 14px 16px; }
+    }
+  </style>
+</head>
+<body>
+<!-- NAV -->
+<nav>
+  <div class="nav-brand">
+    <svg class="shield-svg" viewBox="0 0 44 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M22 2L42 10V26C42 37 33 46 22 50C11 46 2 37 2 26V10L22 2Z" fill="#1d4ed8" stroke="#2563EB" stroke-width="2"/>
+      <text x="22" y="34" font-size="18" font-weight="900" fill="#F59E0B" text-anchor="middle" font-family="Arial">CD</text>
+    </svg>
+    <div>
+      <div class="nav-title">Consumer <span>Defender</span></div>
+      <div class="nav-tagline">Your Money. Protected.</div>
+    </div>
+  </div>
+</nav>
+
+<!-- HOME SCREEN -->
+<div id="home-screen">
+  <div class="hero">
+    <svg class="hero-shield" viewBox="0 0 90 106" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M45 4L86 20V52C86 76 67 96 45 102C23 96 4 76 4 52V20L45 4Z" fill="#1d4ed8" stroke="#2563EB" stroke-width="3"/>
+      <path d="M30 53L41 64L62 42" stroke="#F59E0B" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <h1>Consumer <span>Defender</span></h1>
+    <p>AI-powered analysis that finds overcharges, flags bad deals, and arms you with the script to fight back.</p>
+    <p class="hero-sub">Select a module below to get started</p>
+  </div>
+
+  <div class="section-title">Choose Your Defense</div>
+  <div class="section-heading">Module Marketplace</div>
+
+  <div class="modules">
+    <div class="module-card unlocked" onclick="openModule('car-repair')">
+      <div class="module-icon">🔧</div>
+      <div class="module-title">Car Repair Defense</div>
+      <div class="module-desc">Upload your repair estimate. We'll find overcharges, flag unnecessary work, and give you a word-for-word negotiation script.</div>
+      <span class="module-badge badge-unlocked">✓ UNLOCKED</span>
+    </div>
+    <div class="module-card" onclick="showPaywall('Contractor Defense')">
+      <div class="lock-icon">🔒</div>
+      <div class="module-icon">🏗️</div>
+      <div class="module-title">Contractor Defense</div>
+      <div class="module-desc">Roofing, HVAC, plumbing, remodels — get a full breakdown of your contractor quote vs. real market rates.</div>
+      <span class="module-badge badge-locked">$4.99 UNLOCK</span>
+    </div>
+    <div class="module-card" onclick="showPaywall('Medical Bill Defense')">
+      <div class="lock-icon">🔒</div>
+      <div class="module-icon">🏥</div>
+      <div class="module-title">Medical Bill Defense</div>
+      <div class="module-desc">Hospital bills are riddled with errors. We decode the charges, flag duplicates, and help you dispute them.</div>
+      <span class="module-badge badge-locked">$4.99 UNLOCK</span>
+    </div>
+    <div class="module-card" onclick="showPaywall('Insurance Defense')">
+      <div class="lock-icon">🔒</div>
+      <div class="module-icon">📋</div>
+      <div class="module-title">Insurance Defense</div>
+      <div class="module-desc">Stop overpaying on renewal. We analyze your policy and find coverage gaps, overpriced add-ons, and better alternatives.</div>
+      <span class="module-badge badge-locked">$4.99 UNLOCK</span>
+    </div>
+  </div>
+
+  <div style="padding: 0 24px;">
+    <div class="bundle-banner">
+      <h3>🛡️ All 4 Modules — $14.99</h3>
+      <p>Save $5 and get complete protection across car repairs, contractors, medical bills, and insurance.</p>
+      <button class="bundle-btn" onclick="showPaywall('All 4 Modules Bundle')">Unlock Everything — $14.99</button>
+    </div>
+  </div>
+</div><!-- end home-screen -->
+<!-- PAYWALL MODAL -->
+<div class="modal-overlay" id="paywall-modal">
+  <div class="modal">
+    <div style="font-size:48px;margin-bottom:12px;">🛡️</div>
+    <h2>Unlock <span id="module-name-display" style="color:#F59E0B;"></span></h2>
+    <p>One-time payment — no subscription, no renewal. Use it forever.</p>
+    <div class="modal-price">$4.99</div>
+    <div class="modal-price-sub">One-time unlock</div>
+    <button class="modal-btn" onclick="completePurchase()">Unlock Now — $4.99</button>
+    <div class="modal-cancel" onclick="closePaywall()">Maybe later</div>
+  </div>
+</div>
+
+<!-- ANALYZER SCREEN -->
+<div id="analyzer-screen">
+  <button class="back-btn" onclick="goHome()">← Back to Modules</button>
+
+  <div class="analyzer-header">
+    <h2>🔧 Car Repair Defense</h2>
+    <p>Enter your vehicle info and paste or upload your repair estimate below.</p>
+  </div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label class="form-label">Year</label>
+      <input type="text" id="year" placeholder="e.g. 2019" maxlength="4"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Make</label>
+      <input type="text" id="make" placeholder="e.g. Honda"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Model</label>
+      <input type="text" id="model" placeholder="e.g. Accord"/>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label class="form-label">Mileage (optional)</label>
+    <input type="text" id="mileage" placeholder="e.g. 78,000 miles"/>
+  </div>
+
+  <div class="form-group">
+    <label class="form-label">Repair Estimate — Paste Text or Upload File</label>
+    <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()"
+         ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
+      <div class="drop-zone-icon">📄</div>
+      <p><span>Click to upload</span> or drag &amp; drop your estimate here</p>
+      <p style="margin-top:6px;font-size:12px;">Supports photos, PDFs, or any image of your estimate</p>
+    </div>
+    <input type="file" id="file-input" style="display:none" accept="image/*,.pdf" onchange="handleFileSelect(event)"/>
+    <textarea id="estimate-text" placeholder="Or paste the estimate text directly here...&#10;&#10;Example:&#10;Oil Change — $89.99&#10;Brake Pads (Front) — $320.00&#10;Serpentine Belt — $210.00"></textarea>
+  </div>
+
+  <button class="analyze-btn" id="analyze-btn" onclick="analyzeEstimate()">🛡️ Analyze My Estimate</button>
+  <div class="spinner" id="spinner"></div>
+  <div class="loading-text" id="loading-text">Consumer Defender is analyzing your estimate...</div>
+  <div class="error-box" id="error-box"></div>
+  <div id="results"></div>
+</div>
+
+<script>
+  // ── Navigation ──
+  function openModule(mod) {
+    document.getElementById('home-screen').style.display = 'none';
+    document.getElementById('analyzer-screen').style.display = 'block';
+    window.scrollTo(0, 0);
+  }
+  function goHome() {
+    document.getElementById('analyzer-screen').style.display = 'none';
+    document.getElementById('home-screen').style.display = 'block';
+    document.getElementById('results').style.display = 'none';
+    document.getElementById('results').innerHTML = '';
+    document.getElementById('error-box').style.display = 'none';
+    window.scrollTo(0, 0);
+  }
+
+  // ── Paywall ──
+  function showPaywall(moduleName) {
+    document.getElementById('module-name-display').textContent = moduleName;
+    document.getElementById('paywall-modal').classList.add('active');
+  }
+  function closePaywall() {
+    document.getElementById('paywall-modal').classList.remove('active');
+  }
+  function completePurchase() {
+    closePaywall();
+    alert('Payment processing coming soon! Stripe integration will be added before launch.');
+  }
+
+  // ── File Upload ──
+  function handleDragOver(e) {
+    e.preventDefault();
+    document.getElementById('drop-zone').classList.add('drag-over');
+  }
+  function handleDragLeave(e) {
+    document.getElementById('drop-zone').classList.remove('drag-over');
+  }
+  function handleDrop(e) {
+    e.preventDefault();
+    document.getElementById('drop-zone').classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file) readFile(file);
+  }
+  function handleFileSelect(e) {
+    const file = e.target.files[0];
+    if (file) readFile(file);
+  }
+  function readFile(file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      document.getElementById('drop-zone').innerHTML =
+        '<div class="drop-zone-icon">✅</div><p><strong>' + file.name + '</strong> loaded</p>';
+      // For images/PDFs we send the filename as a note; text extraction happens server-side
+      if (file.type.startsWith('text')) {
+        document.getElementById('estimate-text').value = e.target.result;
+      } else {
+        document.getElementById('estimate-text').placeholder =
+          'File "' + file.name + '" attached. You can also paste any additional text here.';
+      }
+    };
+    if (file.type.startsWith('text')) {
+      reader.readAsText(file);
+    } else {
+      reader.readAsDataURL(file);
+    }
+  }
+
+  // ── Analysis ──
+  async function analyzeEstimate() {
+    const estimateText = document.getElementById('estimate-text').value.trim();
+    const year = document.getElementById('year').value.trim();
+    const make = document.getElementById('make').value.trim();
+    const model = document.getElementById('model').value.trim();
+    const mileage = document.getElementById('mileage').value.trim();
+
+    if (!estimateText) {
+      showError('Please paste your repair estimate text or upload a file before analyzing.');
+      return;
+    }
+
+    const vehicleInfo = [year, make, model].filter(Boolean).join(' ') +
+                        (mileage ? ' — ' + mileage : '');
+
+    setLoading(true);
+    clearError();
+    document.getElementById('results').style.display = 'none';
+
+    try {
+      const response = await fetch('/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ estimate_text: estimateText, vehicle_info: vehicleInfo })
+      });
+      const data = await response.json();
+      if (data.error) { showError(data.error); return; }
+      renderResults(data);
+    } catch (err) {
+      showError('Could not connect to the server. Make sure the app is running.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function setLoading(on) {
+    document.getElementById('spinner').style.display = on ? 'block' : 'none';
+    document.getElementById('loading-text').style.display = on ? 'block' : 'none';
+    document.getElementById('analyze-btn').disabled = on;
+  }
+  function showError(msg) {
+    const el = document.getElementById('error-box');
+    el.textContent = '⚠️ ' + msg;
+    el.style.display = 'block';
+  }
+  function clearError() {
+    document.getElementById('error-box').style.display = 'none';
+  }
+
+  // ── Render Results ──
+  function renderResults(data) {
+    const verdictClass = 'verdict-' + (data.verdict || 'FAIR');
+    const verdictLabel = {
+      OVERCHARGED: '⚠️ Overcharged',
+      SLIGHTLY_OVERPRICED: '⚡ Slightly Overpriced',
+      FAIR: '✅ Fair Price'
+    }[data.verdict] || data.verdict;
+
+    const savings = (data.totalOvercharge || 0).toFixed(2);
+    const charged = (data.totalCharged || 0).toFixed(2);
+    const fair = (data.totalFair || 0).toFixed(2);
+
+    let lineItemsHtml = '';
+    (data.lineItems || []).forEach(item => {
+      const diff = (item.charged - item.fair).toFixed(2);
+      lineItemsHtml += `
+        <div class="line-item">
+          <div>
+            <span class="flag-pill flag-${item.flag}">${item.flag}</span>
+            <div class="line-item-name">${item.name}</div>
+            <div class="line-item-reason">${item.reason || ''}</div>
+          </div>
+          <div class="line-item-prices">
+            <div class="charged-price">$${(item.charged||0).toFixed(2)}</div>
+            <div class="fair-price">Fair: $${(item.fair||0).toFixed(2)}</div>
+            ${diff > 0 ? `<div style="font-size:11px;color:#EF4444;margin-top:2px;">+$${diff} over</div>` : ''}
+          </div>
+        </div>`;
+    });
+
+    let scriptHtml = '';
+    (data.negotiationScript || []).forEach(line => {
+      scriptHtml += `<div class="script-line">"${line}"</div>`;
+    });
+
+    let questionsHtml = '';
+    (data.questionsToAsk || []).forEach((q, i) => {
+      questionsHtml += `<div class="question-item"><div class="question-num">${i+1}</div><div>${q}</div></div>`;
+    });
+
+    document.getElementById('results').innerHTML = `
+      <div class="verdict-banner ${verdictClass}">
+        <div class="verdict-label">${verdictLabel}</div>
+        <div class="verdict-title">${data.verdict === 'OVERCHARGED' ? 'You\'re being overcharged.' : data.verdict === 'SLIGHTLY_OVERPRICED' ? 'Prices are a bit high.' : 'This estimate looks fair.'}</div>
+        <div class="verdict-summary">${data.summary || ''}</div>
+        <div class="savings-row">
+          <div class="savings-box"><div class="savings-box-label">Total Charged</div><div class="savings-box-value charged-val">$${charged}</div></div>
+          <div class="savings-box"><div class="savings-box-label">Fair Price</div><div class="savings-box-value fair-val">$${fair}</div></div>
+          <div class="savings-box"><div class="savings-box-label">Potential Savings</div><div class="savings-box-value overcharge-val">$${savings}</div></div>
+        </div>
+      </div>
+      ${lineItemsHtml ? `<div class="results-section"><div class="results-section-title">Line Item Breakdown</div>${lineItemsHtml}</div>` : ''}
+      ${scriptHtml ? `<div class="results-section"><div class="results-section-title">Your Negotiation Script</div>${scriptHtml}</div>` : ''}
+      ${questionsHtml ? `<div class="results-section"><div class="results-section-title">Questions to Ask the Shop</div>${questionsHtml}</div>` : ''}
+    `;
+    document.getElementById('results').style.display = 'block';
+    document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+  }
+</script>
+</body>
+</html>
